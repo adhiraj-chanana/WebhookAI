@@ -30,9 +30,19 @@ _ENVELOPE_DICT = {
 @pytest.mark.asyncio
 async def test_process_webhook_logs_envelope(caplog):
     import logging
+    from app.router import RoutingDecision
 
-    with caplog.at_level(logging.INFO, logger="app.worker"):
-        await process_webhook(_ENVELOPE_DICT)
+    mock_decision = RoutingDecision(
+        action_id="log_event",
+        confidence=0.9,
+        extracted_params={},
+        reasoning="Test routing decision.",
+        needs_review=False,
+    )
+
+    with patch("app.worker.route_webhook", new=AsyncMock(return_value=mock_decision)):
+        with caplog.at_level(logging.INFO, logger="app.worker"):
+            await process_webhook(_ENVELOPE_DICT)
 
     assert "payment_intent.succeeded" in caplog.text
     assert "evt_worker_001" in caplog.text

@@ -16,6 +16,7 @@ from upstash_redis.asyncio import Redis as UpstashRedis
 
 from app.models import WebhookEnvelope
 from app.queue import DLQ_KEY, QUEUE_KEY, get_redis
+from app.router import route_webhook
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +25,7 @@ _RETRY_DELAYS = (5, 30, 300)
 
 
 async def process_webhook(envelope_dict: dict) -> None:
-    """
-    Deserialise the envelope and dispatch it.
-    Week 3 will replace the log statement with LLM routing.
-    """
+    """Deserialise the envelope, call the LLM router, and log the decision."""
     envelope = WebhookEnvelope.model_validate(envelope_dict)
     logger.info(
         "Processing webhook source=%s event_type=%s event_id=%s",
@@ -35,7 +33,16 @@ async def process_webhook(envelope_dict: dict) -> None:
         envelope.event_type,
         envelope.event_id,
     )
-    # --- Week 3: LLM routing goes here ---
+
+    decision = await route_webhook(envelope)
+    logger.info(
+        "Routing decision action=%s confidence=%.2f needs_review=%s | %s | params=%r",
+        decision.action_id,
+        decision.confidence,
+        decision.needs_review,
+        decision.reasoning,
+        decision.extracted_params,
+    )
 
 
 async def _run_with_retry(redis: UpstashRedis, envelope_dict: dict) -> None:
