@@ -30,6 +30,7 @@ _ENVELOPE_DICT = {
 @pytest.mark.asyncio
 async def test_process_webhook_logs_envelope(caplog):
     import logging
+    from app.actions.base import ActionResult
     from app.router import RoutingDecision
 
     mock_decision = RoutingDecision(
@@ -39,10 +40,16 @@ async def test_process_webhook_logs_envelope(caplog):
         reasoning="Test routing decision.",
         needs_review=False,
     )
+    mock_action = AsyncMock()
+    mock_action.execute = AsyncMock(
+        return_value=ActionResult(success=True, action_id="log_event", output={"id": "uuid-x"})
+    )
+    mock_registry = {"log_event": mock_action}
 
     with patch("app.worker.route_webhook", new=AsyncMock(return_value=mock_decision)):
-        with caplog.at_level(logging.INFO, logger="app.worker"):
-            await process_webhook(_ENVELOPE_DICT)
+        with patch("app.worker.ACTION_REGISTRY", mock_registry):
+            with caplog.at_level(logging.INFO, logger="app.worker"):
+                await process_webhook(_ENVELOPE_DICT)
 
     assert "payment_intent.succeeded" in caplog.text
     assert "evt_worker_001" in caplog.text

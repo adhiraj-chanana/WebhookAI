@@ -14,6 +14,7 @@ import logging
 
 from upstash_redis.asyncio import Redis as UpstashRedis
 
+from app.actions.registry import ACTION_REGISTRY
 from app.models import WebhookEnvelope
 from app.queue import DLQ_KEY, QUEUE_KEY, get_redis
 from app.router import route_webhook
@@ -43,6 +44,26 @@ async def process_webhook(envelope_dict: dict) -> None:
         decision.reasoning,
         decision.extracted_params,
     )
+
+    action = ACTION_REGISTRY.get(decision.action_id)
+    if action is None:
+        logger.warning("Unknown action_id=%r — skipping execution", decision.action_id)
+        return
+
+    # Enrich params with routing context so every action (especially LogEvent) has full context
+    exec_params = {
+        **decision.extracted_params,
+        "source": str(envelope.source),
+        "event_type": envelope.event_type,
+        "action_id": decision.action_id,
+        "confidence": decision.confidence,
+    }
+
+    result = await action.execute(exec_params)
+    if result.success:
+        logger.info("Action succeeded action=%s output=%r", result.action_id, result.output)
+    else:
+        logger.error("Action failed action=%s error=%r", result.action_id, result.error)
 
 
 async def _run_with_retry(redis: UpstashRedis, envelope_dict: dict) -> None:

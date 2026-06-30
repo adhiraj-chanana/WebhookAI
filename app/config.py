@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     upstash_redis_rest_url: str = ""
     upstash_redis_rest_token: str = ""
 
+    slack_webhook_url: str = ""
+
+    resend_api_key: str = ""
+    resend_to_email: str = "adhirajmohanchanana@gmail.com"
+
     supabase_url: str = ""
     supabase_service_key: str = ""
 
