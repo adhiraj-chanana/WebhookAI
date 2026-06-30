@@ -1,0 +1,26 @@
+# https://docs.railway.app/reference/config-as-code
+# Two services share this repo; each points to its own Dockerfile.
+
+[[services]]
+name = "api"
+
+  [services.build]
+  builder = "DOCKERFILE"
+  dockerfilePath = "Dockerfile"
+
+  [services.deploy]
+  healthcheckPath = "/health"
+  healthcheckTimeout = 30
+  restartPolicyType = "ON_FAILURE"
+  restartPolicyMaxRetries = 10
+
+[[services]]
+name = "worker"
+
+  [services.build]
+  builder = "DOCKERFILE"
+  dockerfilePath = "Dockerfile.worker"
+
+  [services.deploy]
+  restartPolicyType = "ON_FAILURE"
+  restartPolicyMaxRetries = 10
