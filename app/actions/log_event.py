@@ -6,6 +6,7 @@ from app.config import settings
 
 _ACTION_ID = "log_event"
 _TABLE = "webhook_events"
+_METADATA_KEYS = {"source", "event_type", "action_id", "confidence"}
 
 
 def get_supabase_client():
@@ -17,15 +18,14 @@ def get_supabase_client():
 class LogEvent(BaseAction):
     async def execute(self, params: dict) -> ActionResult:
         row_id = str(uuid.uuid4())
-        # Extract routing metadata injected by the worker; remaining keys go to params jsonb
-        metadata_keys = {"source", "event_type", "action_id", "confidence"}
         row = {
             "id": row_id,
             "source": params.get("source", "unknown"),
             "event_type": params.get("event_type", "unknown"),
             "action_id": params.get("action_id", _ACTION_ID),
             "confidence": params.get("confidence"),
-            "params": {k: v for k, v in params.items() if k not in metadata_keys},
+            # params jsonb stores the transformer output (summary + severity)
+            "params": {k: v for k, v in params.items() if k not in _METADATA_KEYS},
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         try:

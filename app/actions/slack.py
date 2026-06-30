@@ -6,17 +6,9 @@ from app.config import settings
 _ACTION_ID = "send_slack_message"
 
 
-def _build_text(params: dict) -> str:
-    visible = {k: v for k, v in params.items() if not k.startswith("_")}
-    if not visible:
-        return "Webhook event received (no extracted parameters)."
-    lines = "\n".join(f"• {k}: {v}" for k, v in visible.items())
-    return f"Webhook event:\n{lines}"
-
-
 class SendSlackMessage(BaseAction):
     async def execute(self, params: dict) -> ActionResult:
-        text: str = params.get("text") or _build_text(params)
+        text: str = params["text"]
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(settings.slack_webhook_url, json={"text": text})

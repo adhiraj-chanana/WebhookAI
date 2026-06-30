@@ -7,7 +7,11 @@ load_dotenv()
 secret = os.getenv("STRIPE_WEBHOOK_SECRET")
 payload = json.dumps({
     "type": "payment_intent.succeeded",
-    "data": {"object": {"amount": 5000, "currency": "usd"}}
+    "data": {"object": {
+        "amount": 5000,
+        "currency": "usd",
+        "receipt_email": "adhirajmohanchanana@gmail.com"
+    }}
 })
 ts = str(int(time.time()))
 # REPLACE with this:

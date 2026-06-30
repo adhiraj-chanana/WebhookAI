@@ -18,6 +18,7 @@ from app.actions.registry import ACTION_REGISTRY
 from app.models import WebhookEnvelope
 from app.queue import DLQ_KEY, QUEUE_KEY, get_redis
 from app.router import route_webhook
+from app.transformer import transform_payload
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +51,16 @@ async def process_webhook(envelope_dict: dict) -> None:
         logger.warning("Unknown action_id=%r — skipping execution", decision.action_id)
         return
 
-    # Enrich params with routing context so every action (especially LogEvent) has full context
+    transformed = await transform_payload(
+        envelope=envelope,
+        action_id=decision.action_id,
+        raw_params=decision.extracted_params,
+    )
+    logger.info("Transformed params action=%s params=%r", decision.action_id, transformed)
+
+    # Merge transformed output with routing metadata so LogEvent has all Supabase columns
     exec_params = {
-        **decision.extracted_params,
+        **transformed,
         "source": str(envelope.source),
         "event_type": envelope.event_type,
         "action_id": decision.action_id,

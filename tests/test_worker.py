@@ -46,10 +46,13 @@ async def test_process_webhook_logs_envelope(caplog):
     )
     mock_registry = {"log_event": mock_action}
 
+    mock_transformed = {"text": "Test webhook received"}
+
     with patch("app.worker.route_webhook", new=AsyncMock(return_value=mock_decision)):
-        with patch("app.worker.ACTION_REGISTRY", mock_registry):
-            with caplog.at_level(logging.INFO, logger="app.worker"):
-                await process_webhook(_ENVELOPE_DICT)
+        with patch("app.worker.transform_payload", new=AsyncMock(return_value=mock_transformed)):
+            with patch("app.worker.ACTION_REGISTRY", mock_registry):
+                with caplog.at_level(logging.INFO, logger="app.worker"):
+                    await process_webhook(_ENVELOPE_DICT)
 
     assert "payment_intent.succeeded" in caplog.text
     assert "evt_worker_001" in caplog.text
