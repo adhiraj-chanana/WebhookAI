@@ -1,0 +1,362 @@
+{
+  "timestamp": "2026-07-09T02:17:00.269882+00:00",
+  "dataset": "golden_dataset.json",
+  "total": 30,
+  "correct": 26,
+  "accuracy": 0.8667,
+  "avg_confidence": 0.8823,
+  "per_source": {
+    "stripe": {
+      "correct": 9,
+      "total": 10,
+      "accuracy": 0.9
+    },
+    "github": {
+      "correct": 9,
+      "total": 10,
+      "accuracy": 0.9
+    },
+    "slack": {
+      "correct": 8,
+      "total": 10,
+      "accuracy": 0.8
+    }
+  },
+  "false_positives_per_action": {
+    "send_email": 1,
+    "send_slack_message": 2,
+    "log_event": 1
+  },
+  "fixtures": [
+    {
+      "id": "stripe-001",
+      "source": "stripe",
+      "event_type": "payment_intent.succeeded",
+      "expected": "send_email",
+      "predicted": "send_email",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "A successful payment intent from Stripe is a customer-facing event that warrants sending a payment confirmation email to the receipt email address provided.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-002",
+      "source": "stripe",
+      "event_type": "payment_intent.payment_failed",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "Payment failures are operational events requiring immediate team attention to monitor fraud patterns and system issues, making Slack the best channel for real-time alerting.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-003",
+      "source": "stripe",
+      "event_type": "customer.created",
+      "expected": "log_event",
+      "predicted": "send_email",
+      "confidence": 0.75,
+      "correct": false,
+      "reasoning": "A new Stripe customer account was created, which is a customer-facing event that warrants a welcome email to the customer with their account details.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-004",
+      "source": "stripe",
+      "event_type": "charge.refunded",
+      "expected": "send_email",
+      "predicted": "send_email",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "A charge refund is a customer-facing financial event that requires direct notification to the customer via email to confirm the refund has been processed.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-005",
+      "source": "stripe",
+      "event_type": "invoice.paid",
+      "expected": "send_email",
+      "predicted": "send_email",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "This is a successful payment event that should trigger a customer-facing confirmation email to the invoice payer.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-006",
+      "source": "stripe",
+      "event_type": "customer.subscription.created",
+      "expected": "send_email",
+      "predicted": "send_email",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "A subscription creation is a customer-facing event that warrants confirmation communication, making send_email the best action to notify the customer of their new subscription.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-007",
+      "source": "stripe",
+      "event_type": "customer.subscription.deleted",
+      "expected": "send_email",
+      "predicted": "send_email",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "A subscription cancellation is a significant customer-facing event that warrants an email notification to confirm the cancellation and provide subscription details.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-008",
+      "source": "stripe",
+      "event_type": "charge.dispute.created",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "This is a Stripe charge dispute that requires immediate operational attention since it has status 'needs_response' with a deadline, making it an urgent internal event best suited for Slack notification to the payments team.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-009",
+      "source": "stripe",
+      "event_type": "checkout.session.completed",
+      "expected": "send_email",
+      "predicted": "send_email",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "This is a successful payment completion event that should trigger a customer-facing confirmation email to the buyer.",
+      "needs_review": false
+    },
+    {
+      "id": "stripe-010",
+      "source": "stripe",
+      "event_type": "payment_method.attached",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "Payment method attachment is an internal system event that should be audited for compliance and record-keeping, but doesn't require immediate operational alerts or customer notifications.",
+      "needs_review": false
+    },
+    {
+      "id": "github-001",
+      "source": "github",
+      "event_type": "push",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "GitHub push events to main branch are operational events best handled by notifying the engineering team via Slack for visibility and coordination.",
+      "needs_review": false
+    },
+    {
+      "id": "github-002",
+      "source": "github",
+      "event_type": "pull_request",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "Pull request opened events are operational notifications best delivered to Slack for team visibility and real-time collaboration.",
+      "needs_review": false
+    },
+    {
+      "id": "github-003",
+      "source": "github",
+      "event_type": "pull_request",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.92,
+      "correct": true,
+      "reasoning": "This is a merged pull request event which is a typical operational notification best suited for Slack to keep the development team informed of code integration.",
+      "needs_review": false
+    },
+    {
+      "id": "github-004",
+      "source": "github",
+      "event_type": "issues",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "This is a bug report on an operational GitHub repository that requires immediate engineering attention, making a Slack notification the appropriate action for real-time team visibility.",
+      "needs_review": false
+    },
+    {
+      "id": "github-005",
+      "source": "github",
+      "event_type": "issues",
+      "expected": "log_event",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": false,
+      "reasoning": "GitHub issue closures are operational team events that warrant real-time Slack notification to keep the development team informed of project progress.",
+      "needs_review": false
+    },
+    {
+      "id": "github-006",
+      "source": "github",
+      "event_type": "star",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "GitHub star events are informational metrics that don't require immediate operational alerts or customer notifications, making logging the most appropriate action for audit and analytics purposes.",
+      "needs_review": false
+    },
+    {
+      "id": "github-007",
+      "source": "github",
+      "event_type": "fork",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "This is a repository fork event that should be logged for auditing and tracking purposes, as it doesn't require immediate operational action like a failed payment or PR review, nor is it a customer-facing transaction.",
+      "needs_review": false
+    },
+    {
+      "id": "github-008",
+      "source": "github",
+      "event_type": "release",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "GitHub release published events are operational announcements best delivered to Slack for team visibility and coordination.",
+      "needs_review": false
+    },
+    {
+      "id": "github-009",
+      "source": "github",
+      "event_type": "deployment",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "GitHub deployment events are operational in nature and require immediate team awareness; Slack notification is the best choice for alerting the ops/dev team about production deployments.",
+      "needs_review": false
+    },
+    {
+      "id": "github-010",
+      "source": "github",
+      "event_type": "check_run",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "GitHub check run failures are operational events that require immediate team notification, making Slack the appropriate choice for alerting developers about the failing CI tests.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-001",
+      "source": "slack",
+      "event_type": "message",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "This is a general Slack conversation asking about PR review status, not an operational event (PR/deploy/payment failure) or customer-facing event, so logging is the appropriate safe default action for audit purposes.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-002",
+      "source": "slack",
+      "event_type": "app_mention",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "This is a Slack app mention requesting operational information about webhook queue depth, which requires an immediate response back to the same Slack channel where the request was made.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-003",
+      "source": "slack",
+      "event_type": "reaction_added",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "A reaction_added event is a user interaction that should be recorded for auditing purposes, but does not require immediate operational notification or customer-facing communication.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-004",
+      "source": "slack",
+      "event_type": "channel_created",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.95,
+      "correct": true,
+      "reasoning": "Channel creation is an internal infrastructure event that should be recorded for audit trails and historical tracking, not an operational alert requiring immediate notification.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-005",
+      "source": "slack",
+      "event_type": "member_joined_channel",
+      "expected": "send_slack_message",
+      "predicted": "log_event",
+      "confidence": 0.85,
+      "correct": false,
+      "reasoning": "Member joining a Slack channel is an internal organizational event that should be recorded for auditing and historical purposes, but does not require immediate operational notifications or customer-facing communications.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-006",
+      "source": "slack",
+      "event_type": "file_shared",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "File sharing is an informational event that requires audit tracking but doesn't need immediate notification to users or external channels.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-007",
+      "source": "slack",
+      "event_type": "pin_added",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "This is an internal Slack activity (message pinned) that should be recorded for audit purposes without requiring immediate notification, as it's not an operational event like a deployment or PR, nor a customer-facing event.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-008",
+      "source": "slack",
+      "event_type": "workflow_step_execute",
+      "expected": "log_event",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": false,
+      "reasoning": "This is a Slack workflow_step_execute event that explicitly specifies a target channel (C_reports), making send_slack_message the natural action for delivering the daily report notification to that channel.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-009",
+      "source": "slack",
+      "event_type": "team_join",
+      "expected": "send_slack_message",
+      "predicted": "send_slack_message",
+      "confidence": 0.85,
+      "correct": true,
+      "reasoning": "A new team member has joined, which is an operational/HR event best handled by notifying the Slack channel so the team is aware of the new hire.",
+      "needs_review": false
+    },
+    {
+      "id": "slack-010",
+      "source": "slack",
+      "event_type": "link_shared",
+      "expected": "log_event",
+      "predicted": "log_event",
+      "confidence": 0.75,
+      "correct": true,
+      "reasoning": "A link_shared event from Slack is informational metadata that doesn't require immediate operational notification or customer-facing communication, making logging the most appropriate action for audit and tracking purposes.",
+      "needs_review": false
+    }
+  ]
+}

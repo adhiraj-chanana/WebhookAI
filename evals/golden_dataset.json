@@ -1,0 +1,615 @@
+[
+  {
+    "id": "stripe-001",
+    "source": "stripe",
+    "event_type": "payment_intent.succeeded",
+    "payload": {
+      "id": "evt_stripe_001",
+      "type": "payment_intent.succeeded",
+      "data": {
+        "object": {
+          "id": "pi_001",
+          "amount": 5000,
+          "currency": "usd",
+          "receipt_email": "customer@example.com",
+          "status": "succeeded",
+          "description": "Subscription payment"
+        }
+      }
+    },
+    "expected_action": "send_email",
+    "notes": "Successful payment — customer expects a receipt email"
+  },
+  {
+    "id": "stripe-002",
+    "source": "stripe",
+    "event_type": "payment_intent.payment_failed",
+    "payload": {
+      "id": "evt_stripe_002",
+      "type": "payment_intent.payment_failed",
+      "data": {
+        "object": {
+          "id": "pi_002",
+          "amount": 2000,
+          "currency": "usd",
+          "last_payment_error": {
+            "code": "card_declined",
+            "message": "Your card was declined."
+          },
+          "status": "requires_payment_method"
+        }
+      }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "Payment failure — operational alert for the team"
+  },
+  {
+    "id": "stripe-003",
+    "source": "stripe",
+    "event_type": "customer.created",
+    "payload": {
+      "id": "evt_stripe_003",
+      "type": "customer.created",
+      "data": {
+        "object": {
+          "id": "cus_001",
+          "email": "newuser@example.com",
+          "name": "Jane Smith",
+          "created": 1700000000
+        }
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "New customer record — no immediate action, just audit"
+  },
+  {
+    "id": "stripe-004",
+    "source": "stripe",
+    "event_type": "charge.refunded",
+    "payload": {
+      "id": "evt_stripe_004",
+      "type": "charge.refunded",
+      "data": {
+        "object": {
+          "id": "ch_001",
+          "amount": 3000,
+          "amount_refunded": 3000,
+          "currency": "usd",
+          "receipt_email": "customer@example.com",
+          "refunds": {
+            "data": [{ "reason": "requested_by_customer" }]
+          }
+        }
+      }
+    },
+    "expected_action": "send_email",
+    "notes": "Refund processed — customer should be notified via email"
+  },
+  {
+    "id": "stripe-005",
+    "source": "stripe",
+    "event_type": "invoice.paid",
+    "payload": {
+      "id": "evt_stripe_005",
+      "type": "invoice.paid",
+      "data": {
+        "object": {
+          "id": "in_001",
+          "amount_paid": 9900,
+          "currency": "usd",
+          "customer_email": "subscriber@example.com",
+          "subscription": "sub_001",
+          "status": "paid"
+        }
+      }
+    },
+    "expected_action": "send_email",
+    "notes": "Invoice paid — send receipt to customer"
+  },
+  {
+    "id": "stripe-006",
+    "source": "stripe",
+    "event_type": "customer.subscription.created",
+    "payload": {
+      "id": "evt_stripe_006",
+      "type": "customer.subscription.created",
+      "data": {
+        "object": {
+          "id": "sub_001",
+          "customer": "cus_001",
+          "status": "active",
+          "plan": {
+            "nickname": "Pro Monthly",
+            "amount": 2900,
+            "currency": "usd",
+            "interval": "month"
+          }
+        }
+      }
+    },
+    "expected_action": "send_email",
+    "notes": "New subscription — welcome/confirmation email to customer"
+  },
+  {
+    "id": "stripe-007",
+    "source": "stripe",
+    "event_type": "customer.subscription.deleted",
+    "payload": {
+      "id": "evt_stripe_007",
+      "type": "customer.subscription.deleted",
+      "data": {
+        "object": {
+          "id": "sub_002",
+          "customer": "cus_002",
+          "status": "canceled",
+          "canceled_at": 1700100000,
+          "plan": {
+            "nickname": "Pro Monthly",
+            "amount": 2900,
+            "currency": "usd"
+          }
+        }
+      }
+    },
+    "expected_action": "send_email",
+    "notes": "Subscription cancelled — send cancellation confirmation email"
+  },
+  {
+    "id": "stripe-008",
+    "source": "stripe",
+    "event_type": "charge.dispute.created",
+    "payload": {
+      "id": "evt_stripe_008",
+      "type": "charge.dispute.created",
+      "data": {
+        "object": {
+          "id": "dp_001",
+          "amount": 5000,
+          "currency": "usd",
+          "reason": "fraudulent",
+          "status": "needs_response",
+          "charge": "ch_002",
+          "evidence_details": {
+            "due_by": 1700200000
+          }
+        }
+      }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "Dispute opened — team needs immediate Slack alert to respond"
+  },
+  {
+    "id": "stripe-009",
+    "source": "stripe",
+    "event_type": "checkout.session.completed",
+    "payload": {
+      "id": "evt_stripe_009",
+      "type": "checkout.session.completed",
+      "data": {
+        "object": {
+          "id": "cs_001",
+          "amount_total": 4900,
+          "currency": "usd",
+          "customer_email": "buyer@example.com",
+          "payment_status": "paid",
+          "mode": "payment"
+        }
+      }
+    },
+    "expected_action": "send_email",
+    "notes": "Checkout complete — send order confirmation email to buyer"
+  },
+  {
+    "id": "stripe-010",
+    "source": "stripe",
+    "event_type": "payment_method.attached",
+    "payload": {
+      "id": "evt_stripe_010",
+      "type": "payment_method.attached",
+      "data": {
+        "object": {
+          "id": "pm_001",
+          "type": "card",
+          "customer": "cus_003",
+          "card": {
+            "brand": "visa",
+            "last4": "4242",
+            "exp_month": 12,
+            "exp_year": 2027
+          }
+        }
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "Card saved — informational, no immediate user action needed"
+  },
+  {
+    "id": "github-001",
+    "source": "github",
+    "event_type": "push",
+    "payload": {
+      "ref": "refs/heads/main",
+      "commits": [
+        {
+          "id": "abc123",
+          "message": "feat: add payment retry logic",
+          "author": { "name": "Alice Dev", "email": "alice@example.com" }
+        }
+      ],
+      "pusher": { "name": "alice-dev" },
+      "repository": { "full_name": "org/webhookai", "private": false }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "Code pushed to main — team should be notified via Slack"
+  },
+  {
+    "id": "github-002",
+    "source": "github",
+    "event_type": "pull_request",
+    "payload": {
+      "action": "opened",
+      "number": 42,
+      "pull_request": {
+        "title": "feat: add Stripe webhook handler",
+        "body": "Implements the Stripe webhook processing pipeline.",
+        "state": "open",
+        "user": { "login": "bob-dev" },
+        "head": { "ref": "feat/stripe-handler" },
+        "base": { "ref": "main" }
+      },
+      "repository": { "full_name": "org/webhookai" }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "PR opened — team alert to request review"
+  },
+  {
+    "id": "github-003",
+    "source": "github",
+    "event_type": "pull_request",
+    "payload": {
+      "action": "closed",
+      "number": 38,
+      "pull_request": {
+        "title": "fix: correct HMAC signature check",
+        "state": "closed",
+        "merged": true,
+        "merged_by": { "login": "alice-dev" },
+        "user": { "login": "carol-dev" },
+        "base": { "ref": "main" }
+      },
+      "repository": { "full_name": "org/webhookai" }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "PR merged to main — team should be notified"
+  },
+  {
+    "id": "github-004",
+    "source": "github",
+    "event_type": "issues",
+    "payload": {
+      "action": "opened",
+      "issue": {
+        "number": 99,
+        "title": "Webhook signature verification fails for Slack",
+        "body": "When receiving Slack webhooks, signature verification occasionally fails...",
+        "user": { "login": "external-contributor" },
+        "labels": [{ "name": "bug" }]
+      },
+      "repository": { "full_name": "org/webhookai" }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "Bug report opened — team alert so someone can triage"
+  },
+  {
+    "id": "github-005",
+    "source": "github",
+    "event_type": "issues",
+    "payload": {
+      "action": "closed",
+      "issue": {
+        "number": 87,
+        "title": "Redis queue depth not visible in dashboard",
+        "state": "closed",
+        "closed_by": { "login": "alice-dev" }
+      },
+      "repository": { "full_name": "org/webhookai" }
+    },
+    "expected_action": "log_event",
+    "notes": "Issue closed — informational, no immediate action needed"
+  },
+  {
+    "id": "github-006",
+    "source": "github",
+    "event_type": "star",
+    "payload": {
+      "action": "created",
+      "starred_at": "2024-01-15T10:30:00Z",
+      "sender": { "login": "random-user-42" },
+      "repository": {
+        "full_name": "org/webhookai",
+        "stargazers_count": 128
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "New GitHub star — informational, just record it"
+  },
+  {
+    "id": "github-007",
+    "source": "github",
+    "event_type": "fork",
+    "payload": {
+      "forkee": {
+        "full_name": "another-user/webhookai",
+        "owner": { "login": "another-user" }
+      },
+      "repository": { "full_name": "org/webhookai" },
+      "sender": { "login": "another-user" }
+    },
+    "expected_action": "log_event",
+    "notes": "Repository forked — informational, no action required"
+  },
+  {
+    "id": "github-008",
+    "source": "github",
+    "event_type": "release",
+    "payload": {
+      "action": "published",
+      "release": {
+        "tag_name": "v1.2.0",
+        "name": "v1.2.0 — Dashboard & Replay",
+        "body": "## What's new\n- Live event dashboard\n- Replay endpoint\n- LLM routing improvements",
+        "draft": false,
+        "prerelease": false,
+        "author": { "login": "alice-dev" }
+      },
+      "repository": { "full_name": "org/webhookai" }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "New release published — team notification about the release"
+  },
+  {
+    "id": "github-009",
+    "source": "github",
+    "event_type": "deployment",
+    "payload": {
+      "deployment": {
+        "id": 789,
+        "environment": "production",
+        "description": "Deploy v1.2.0 to production",
+        "creator": { "login": "alice-dev" },
+        "sha": "abc123def456"
+      },
+      "repository": { "full_name": "org/webhookai" }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "Production deployment triggered — team should be alerted"
+  },
+  {
+    "id": "github-010",
+    "source": "github",
+    "event_type": "check_run",
+    "payload": {
+      "action": "completed",
+      "check_run": {
+        "name": "CI / test",
+        "status": "completed",
+        "conclusion": "failure",
+        "head_sha": "def789",
+        "output": {
+          "title": "3 tests failed",
+          "summary": "Tests failed in test_router.py"
+        }
+      },
+      "repository": { "full_name": "org/webhookai" }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "CI tests failed — team needs Slack alert to investigate"
+  },
+  {
+    "id": "slack-001",
+    "source": "slack",
+    "event_type": "message",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_001",
+      "event": {
+        "type": "message",
+        "text": "Has anyone reviewed the PR for the payment handler?",
+        "user": "U12345",
+        "channel": "C_general",
+        "ts": "1700000001.000100"
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "Regular channel message — just log it, no automated action"
+  },
+  {
+    "id": "slack-002",
+    "source": "slack",
+    "event_type": "app_mention",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_002",
+      "event": {
+        "type": "app_mention",
+        "text": "<@U_bot> can you check the webhook queue depth?",
+        "user": "U12345",
+        "channel": "C_dev",
+        "ts": "1700000002.000200"
+      }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "Bot was mentioned — should respond in Slack"
+  },
+  {
+    "id": "slack-003",
+    "source": "slack",
+    "event_type": "reaction_added",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_003",
+      "event": {
+        "type": "reaction_added",
+        "user": "U67890",
+        "reaction": "white_check_mark",
+        "item": {
+          "type": "message",
+          "channel": "C_dev",
+          "ts": "1700000000.000100"
+        }
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "Reaction added to a message — informational, just audit"
+  },
+  {
+    "id": "slack-004",
+    "source": "slack",
+    "event_type": "channel_created",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_004",
+      "event": {
+        "type": "channel_created",
+        "channel": {
+          "id": "C_new_channel",
+          "name": "webhookai-alerts",
+          "created": 1700000003,
+          "creator": "U12345"
+        }
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "New channel created — informational audit entry"
+  },
+  {
+    "id": "slack-005",
+    "source": "slack",
+    "event_type": "member_joined_channel",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_005",
+      "event": {
+        "type": "member_joined_channel",
+        "user": "U_newmember",
+        "channel": "C_general",
+        "channel_type": "C",
+        "inviter": "U12345"
+      }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "New member joined — send a welcome message in the channel"
+  },
+  {
+    "id": "slack-006",
+    "source": "slack",
+    "event_type": "file_shared",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_006",
+      "event": {
+        "type": "file_shared",
+        "file_id": "F_001",
+        "user_id": "U12345",
+        "channel_id": "C_general",
+        "file": {
+          "name": "architecture_diagram.png",
+          "filetype": "png",
+          "size": 204800
+        }
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "File shared — just audit the event"
+  },
+  {
+    "id": "slack-007",
+    "source": "slack",
+    "event_type": "pin_added",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_007",
+      "event": {
+        "type": "pin_added",
+        "user": "U12345",
+        "channel_id": "C_dev",
+        "item": {
+          "type": "message",
+          "message": {
+            "text": "Deployment checklist for v1.2.0"
+          }
+        }
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "Message pinned — informational, no action needed"
+  },
+  {
+    "id": "slack-008",
+    "source": "slack",
+    "event_type": "workflow_step_execute",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_008",
+      "event": {
+        "type": "workflow_step_execute",
+        "callback_id": "send_daily_report",
+        "workflow_step": {
+          "workflow_id": "W_001",
+          "step_id": "S_001",
+          "inputs": {
+            "channel": { "value": "C_reports" }
+          }
+        }
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "Workflow step execution — audit the step, no separate action"
+  },
+  {
+    "id": "slack-009",
+    "source": "slack",
+    "event_type": "team_join",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_009",
+      "event": {
+        "type": "team_join",
+        "user": {
+          "id": "U_brand_new",
+          "name": "new.hire",
+          "real_name": "Sam New",
+          "profile": {
+            "email": "sam.new@example.com",
+            "title": "Backend Engineer"
+          }
+        }
+      }
+    },
+    "expected_action": "send_slack_message",
+    "notes": "New team member joined — send a welcome Slack message"
+  },
+  {
+    "id": "slack-010",
+    "source": "slack",
+    "event_type": "link_shared",
+    "payload": {
+      "type": "event_callback",
+      "event_id": "Ev_slack_010",
+      "event": {
+        "type": "link_shared",
+        "channel": "C_general",
+        "user": "U12345",
+        "message_ts": "1700000010.000100",
+        "links": [
+          {
+            "domain": "github.com",
+            "url": "https://github.com/org/webhookai/pull/42"
+          }
+        ]
+      }
+    },
+    "expected_action": "log_event",
+    "notes": "Link shared in channel — informational, no action required"
+  }
+]
