@@ -22,5 +22,8 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""
 
+    # Comma-separated origins. Set to your Vercel URL in Railway env vars.
+    cors_allow_origins: str = "*"
+
 
 settings = Settings()

@@ -14,6 +14,7 @@ import logging
 
 from upstash_redis.asyncio import Redis as UpstashRedis
 
+from app.actions.log_event import LogEvent
 from app.actions.registry import ACTION_REGISTRY
 from app.models import WebhookEnvelope
 from app.queue import DLQ_KEY, QUEUE_KEY, get_redis
@@ -58,13 +59,18 @@ async def process_webhook(envelope_dict: dict) -> None:
     )
     logger.info("Transformed params action=%s params=%r", decision.action_id, transformed)
 
-    # Merge transformed output with routing metadata so LogEvent has all Supabase columns
+    # Merge transformed output with routing metadata.
+    # needs_review / event_id / raw_payload land in the params jsonb via LogEvent
+    # so the dashboard can display them and the replay endpoint can reconstruct envelopes.
     exec_params = {
         **transformed,
         "source": str(envelope.source),
         "event_type": envelope.event_type,
         "action_id": decision.action_id,
         "confidence": decision.confidence,
+        "needs_review": decision.needs_review,
+        "event_id": envelope.event_id,
+        "raw_payload": envelope.raw_payload,
     }
 
     result = await action.execute(exec_params)
@@ -72,6 +78,13 @@ async def process_webhook(envelope_dict: dict) -> None:
         logger.info("Action succeeded action=%s output=%r", result.action_id, result.output)
     else:
         logger.error("Action failed action=%s error=%r", result.action_id, result.error)
+
+    # Always write an audit row so the dashboard shows every processed event.
+    # Skip if log_event was already the primary action to avoid a duplicate row.
+    if decision.action_id != "log_event":
+        audit = await LogEvent().execute(exec_params)
+        if not audit.success:
+            logger.warning("Audit write failed: %s", audit.error)
 
 
 async def _run_with_retry(redis: UpstashRedis, envelope_dict: dict) -> None:

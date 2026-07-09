@@ -37,6 +37,54 @@ async def _verify_and_build(source: WebhookSource, request: Request) -> WebhookE
     return build_envelope(source, body, request)
 
 
+# ---------------------------------------------------------------------------
+# Replay — defined BEFORE /{source} so FastAPI doesn't consume it
+# ---------------------------------------------------------------------------
+
+
+@router.post("/replay/{event_id}")
+async def replay_event(event_id: str, redis: RedisDep) -> dict:
+    """
+    Fetch a stored webhook_event row from Supabase, reconstruct its
+    WebhookEnvelope, and re-enqueue it for processing.
+    """
+    from supabase import create_client
+
+    if not settings.supabase_url or not settings.supabase_service_key:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Supabase not configured")
+
+    client = create_client(settings.supabase_url, settings.supabase_service_key)
+    result = client.table("webhook_events").select("*").eq("id", event_id).execute()
+
+    if not result.data:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Event {event_id!r} not found")
+
+    row = result.data[0]
+    params: dict = row.get("params") or {}
+
+    try:
+        source = WebhookSource(row["source"])
+    except ValueError:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Unknown source {row['source']!r}")
+
+    envelope = WebhookEnvelope(
+        source=source,
+        event_type=row["event_type"],
+        event_id=params.get("event_id"),
+        raw_payload=params.get("raw_payload") or {},
+        headers={},
+    )
+
+    await redis.lpush(QUEUE_KEY, envelope.model_dump_json())
+    logger.info("Replayed event id=%s source=%s event_type=%s", event_id, source, row["event_type"])
+    return {"status": "queued", "event_id": event_id}
+
+
+# ---------------------------------------------------------------------------
+# Inbound webhook ingestion
+# ---------------------------------------------------------------------------
+
+
 @router.post("/{source}")
 async def receive_webhook(source: WebhookSource, request: Request, redis: RedisDep) -> dict:
     envelope = await _verify_and_build(source, request)
